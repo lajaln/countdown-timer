@@ -1,0 +1,52 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Remote Countdown Timer</title>
+    <script type="module" src="script.js"></script>
+    <style>
+      body {
+        text-align: center;
+        background: black;
+        color: white;
+        font-family: Arial, sans-serif;
+      }
+      .timer {
+        font-size: 25vw;
+        margin-top: 20vh;
+      }
+      .buttons {
+        margin-top: 20px;
+      }
+      button {
+        font-size: 2vw;
+        padding: 10px;
+        margin: 5px;
+        background: gray;
+        color: white;
+        border: none;
+        cursor: pointer;
+      }
+      button:active {
+        background: darkgray;
+      }
+      .overtime {
+        color: red;
+      }
+    </style>
+  </head>
+  <body>
+    <div class="timer" id="timer">00:00</div>
+    <div class="buttons">
+      <button id="addMin">+1 Min</button>
+      <button id="subMin">-1 Min</button>
+      <button id="addSec">+10 Sec</button>
+      <button id="subSec">-10 Sec</button>
+      <button id="startPause">Start/Pause</button>
+      <button id="reset">Reset</button>
+      <button id="fullscreen">Full Screen</button>
+      <!-- NEW BUTTON -->
+    </div>
+  </body>
+</html>
