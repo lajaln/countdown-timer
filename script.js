@@ -18,12 +18,13 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const timerRef = ref(database, "timer");
 
-// Variables
-let remainingTime = 60; // Default timer in seconds
+// Timer Variables
+let remainingTime = 60; // Default countdown (in seconds)
 let isRunning = false;
-let startTime = null; // Time when the countdown starts
+let startTime = null;
+let timerInterval = null;
 
-// Update UI Timer
+// Function to update the display
 function updateTimerDisplay() {
   const minutes = Math.floor(Math.abs(remainingTime) / 60);
   const seconds = Math.abs(remainingTime) % 60;
@@ -32,7 +33,7 @@ function updateTimerDisplay() {
   document.getElementById("timer").classList.toggle("overtime", remainingTime < 0);
 }
 
-// Sync to Firebase
+// Sync Timer with Firebase
 function syncTimer(time, running, startTimestamp) {
   set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
 }
@@ -40,50 +41,66 @@ function syncTimer(time, running, startTimestamp) {
 // Start/Pause Timer
 function startPauseTimer() {
   if (isRunning) {
-    syncTimer(remainingTime, false, null); // Stop the timer
+    isRunning = false;
+    clearInterval(timerInterval);
+    syncTimer(remainingTime, false, null);
   } else {
-    const now = Date.now();
-    syncTimer(remainingTime, true, now); // Start the timer
+    isRunning = true;
+    startTime = Date.now();
+    syncTimer(remainingTime, true, startTime);
+    runTimer();
   }
+}
+
+// Function to keep timer running
+function runTimer() {
+  clearInterval(timerInterval);
+  timerInterval = setInterval(() => {
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+    remainingTime -= elapsed;
+    startTime = Date.now(); // Reset start time to prevent drift
+    updateTimerDisplay();
+    syncTimer(remainingTime, isRunning, startTime);
+  }, 1000);
 }
 
 // Reset Timer
 function resetTimer() {
-  remainingTime = 60;
   isRunning = false;
+  remainingTime = 60;
+  clearInterval(timerInterval);
   syncTimer(remainingTime, false, null);
+  updateTimerDisplay();
 }
 
-// Adjust Time
+// Adjust Timer
 function adjustTime(amount) {
   remainingTime += amount;
   updateTimerDisplay();
   syncTimer(remainingTime, isRunning, startTime);
 }
 
-// Listen for Firebase Changes
+// Listen for Firebase Updates
 onValue(timerRef, (snapshot) => {
   const data = snapshot.val();
   if (data) {
     const now = Date.now();
-    
     if (data.isRunning) {
-      // Calculate the new remaining time based on the stored start time
       const elapsed = Math.floor((now - data.startTime) / 1000);
       remainingTime = data.remainingTime - elapsed;
       isRunning = true;
-
-      // Update UI
       updateTimerDisplay();
+      runTimer(); // Restart timer loop
     } else {
       remainingTime = data.remainingTime;
       isRunning = false;
+      clearInterval(timerInterval);
       updateTimerDisplay();
     }
   }
 });
 
-// Event Listeners
+// Event Listeners for Buttons
 document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("addMin").addEventListener("click", () => adjustTime(60));
   document.getElementById("subMin").addEventListener("click", () => adjustTime(-60));
@@ -93,5 +110,5 @@ document.addEventListener("DOMContentLoaded", () => {
   document.getElementById("reset").addEventListener("click", resetTimer);
 });
 
-// Keep timer running even when device sleeps
+// Keep Timer Running Even When Leaving the Page
 updateTimerDisplay();
