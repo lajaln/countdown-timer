@@ -18,22 +18,20 @@ const app = initializeApp(firebaseConfig);
 const database = getDatabase(app);
 const timerRef = ref(database, "timer");
 
-// Timer Variables
-let remainingTime = 60; // Default countdown (in seconds)
+// Variables
+let remainingTime = 60; // Default 1 minute
 let isRunning = false;
 let startTime = null;
-let timerInterval = null;
 
-// Function to update the display
+// Update UI Timer
 function updateTimerDisplay() {
   const minutes = Math.floor(Math.abs(remainingTime) / 60);
   const seconds = Math.abs(remainingTime) % 60;
-  const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
-  document.getElementById("timer").textContent = formattedTime;
+  document.getElementById("timer").textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
   document.getElementById("timer").classList.toggle("overtime", remainingTime < 0);
 }
 
-// Sync Timer with Firebase
+// Sync Timer to Firebase
 function syncTimer(time, running, startTimestamp) {
   set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
 }
@@ -41,74 +39,55 @@ function syncTimer(time, running, startTimestamp) {
 // Start/Pause Timer
 function startPauseTimer() {
   if (isRunning) {
-    isRunning = false;
-    clearInterval(timerInterval);
-    syncTimer(remainingTime, false, null);
+    syncTimer(remainingTime, false, null); // Stop
   } else {
-    isRunning = true;
-    startTime = Date.now();
-    syncTimer(remainingTime, true, startTime);
-    runTimer();
+    const now = Date.now();
+    syncTimer(remainingTime, true, now); // Start
   }
-}
-
-// Function to keep timer running
-function runTimer() {
-  clearInterval(timerInterval);
-  timerInterval = setInterval(() => {
-    const elapsed = Math.floor((Date.now() - startTime) / 1000);
-    remainingTime -= elapsed;
-    startTime = Date.now(); // Reset start time to prevent drift
-    updateTimerDisplay();
-    syncTimer(remainingTime, isRunning, startTime);
-  }, 1000);
 }
 
 // Reset Timer
 function resetTimer() {
-  isRunning = false;
   remainingTime = 60;
-  clearInterval(timerInterval);
+  isRunning = false;
   syncTimer(remainingTime, false, null);
-  updateTimerDisplay();
 }
 
-// Adjust Timer
+// Adjust Time
 function adjustTime(amount) {
   remainingTime += amount;
   updateTimerDisplay();
   syncTimer(remainingTime, isRunning, startTime);
 }
 
-// Listen for Firebase Updates
+// Listen for Firebase Changes
 onValue(timerRef, (snapshot) => {
   const data = snapshot.val();
   if (data) {
     const now = Date.now();
+
     if (data.isRunning) {
+      // Calculate remaining time dynamically
       const elapsed = Math.floor((now - data.startTime) / 1000);
       remainingTime = data.remainingTime - elapsed;
       isRunning = true;
-      updateTimerDisplay();
-      runTimer(); // Restart timer loop
     } else {
       remainingTime = data.remainingTime;
       isRunning = false;
-      clearInterval(timerInterval);
-      updateTimerDisplay();
     }
+    updateTimerDisplay();
   }
 });
 
-// Event Listeners for Buttons
+// Event Listeners
 document.addEventListener("DOMContentLoaded", () => {
+  document.getElementById("startPause").addEventListener("click", startPauseTimer);
+  document.getElementById("reset").addEventListener("click", resetTimer);
   document.getElementById("addMin").addEventListener("click", () => adjustTime(60));
   document.getElementById("subMin").addEventListener("click", () => adjustTime(-60));
   document.getElementById("addSec").addEventListener("click", () => adjustTime(10));
   document.getElementById("subSec").addEventListener("click", () => adjustTime(-10));
-  document.getElementById("startPause").addEventListener("click", startPauseTimer);
-  document.getElementById("reset").addEventListener("click", resetTimer);
 });
 
-// Keep Timer Running Even When Leaving the Page
+// Keep Timer Running in Background
 updateTimerDisplay();
