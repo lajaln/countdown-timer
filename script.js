@@ -22,8 +22,9 @@ const timerRef = ref(database, "timer");
 let remainingTime = 60; // Default 1 minute
 let isRunning = false;
 let startTime = null;
+let lastUpdateFromFirebase = 0;
 
-// Update UI Timer
+// Update Timer Display
 function updateTimerDisplay() {
   const minutes = Math.floor(Math.abs(remainingTime) / 60);
   const seconds = Math.abs(remainingTime) % 60;
@@ -31,18 +32,23 @@ function updateTimerDisplay() {
   document.getElementById("timer").classList.toggle("overtime", remainingTime < 0);
 }
 
-// Sync Timer to Firebase
+// Sync Timer to Firebase (Avoid Overwriting Fresh Data)
 function syncTimer(time, running, startTimestamp) {
-  set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
+  const now = Date.now();
+  if (now - lastUpdateFromFirebase > 500) { // Prevent overwriting latest changes
+    set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
+  }
 }
 
 // Start/Pause Timer
 function startPauseTimer() {
+  isRunning = !isRunning;
+
   if (isRunning) {
-    syncTimer(remainingTime, false, null); // Stop
+    startTime = Date.now();
+    syncTimer(remainingTime, true, startTime);
   } else {
-    const now = Date.now();
-    syncTimer(remainingTime, true, now); // Start
+    syncTimer(remainingTime, false, null);
   }
 }
 
@@ -53,7 +59,7 @@ function resetTimer() {
   syncTimer(remainingTime, false, null);
 }
 
-// Adjust Time
+// Adjust Timer
 function adjustTime(amount) {
   remainingTime += amount;
   updateTimerDisplay();
@@ -64,10 +70,10 @@ function adjustTime(amount) {
 onValue(timerRef, (snapshot) => {
   const data = snapshot.val();
   if (data) {
+    lastUpdateFromFirebase = Date.now();
     const now = Date.now();
 
     if (data.isRunning) {
-      // Calculate remaining time dynamically
       const elapsed = Math.floor((now - data.startTime) / 1000);
       remainingTime = data.remainingTime - elapsed;
       isRunning = true;
