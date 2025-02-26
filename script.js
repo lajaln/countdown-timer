@@ -23,6 +23,7 @@ let remainingTime = 60; // Default 1 minute
 let isRunning = false;
 let startTime = null;
 let lastUpdateFromFirebase = 0;
+let ignoreNextUpdate = false; // Prevents double updates
 
 // Update Timer Display
 function updateTimerDisplay() {
@@ -34,6 +35,11 @@ function updateTimerDisplay() {
 
 // Sync Timer to Firebase (Avoid Overwriting Fresh Data)
 function syncTimer(time, running, startTimestamp) {
+  if (ignoreNextUpdate) {
+    ignoreNextUpdate = false; // Reset flag
+    return;
+  }
+
   const now = Date.now();
   if (now - lastUpdateFromFirebase > 500) { // Prevent overwriting latest changes
     set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
@@ -43,6 +49,7 @@ function syncTimer(time, running, startTimestamp) {
 // Start/Pause Timer
 function startPauseTimer() {
   isRunning = !isRunning;
+  ignoreNextUpdate = true; // Prevent Firebase from undoing the change
 
   if (isRunning) {
     startTime = Date.now();
@@ -68,6 +75,11 @@ function adjustTime(amount) {
 
 // Listen for Firebase Changes
 onValue(timerRef, (snapshot) => {
+  if (ignoreNextUpdate) {
+    ignoreNextUpdate = false;
+    return;
+  }
+
   const data = snapshot.val();
   if (data) {
     lastUpdateFromFirebase = Date.now();
