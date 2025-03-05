@@ -7,17 +7,24 @@
     <script type="module">
       // Import Firebase SDKs
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-      import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+      import {
+        getDatabase,
+        ref,
+        onValue,
+        set,
+        update,
+      } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
       // Firebase Configuration
       const firebaseConfig = {
         apiKey: "AIzaSyB0PVPp34njGmD5j0Z9njBj9A4t7eM31M8",
         authDomain: "ctimer-1209d.firebaseapp.com",
-        databaseURL: "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
+        databaseURL:
+          "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "ctimer-1209d",
         storageBucket: "ctimer-1209d.firebasestorage.app",
         messagingSenderId: "983710292830",
-        appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf"
+        appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf",
       };
 
       // Initialize Firebase
@@ -34,7 +41,9 @@
         function updateTimerDisplay() {
           const minutes = Math.floor(Math.abs(remainingTime) / 60);
           const seconds = Math.abs(remainingTime) % 60;
-          timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+          timerElement.textContent = `${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
           timerElement.classList.toggle("overtime", remainingTime < 0);
         }
 
@@ -71,14 +80,6 @@
           update(timerRef, { remainingTime });
         }
 
-        function toggleFullScreen() {
-          if (!document.fullscreenElement) {
-            document.documentElement.requestFullscreen();
-          } else {
-            document.exitFullscreen();
-          }
-        }
-
         // Sync Timer Data from Firebase
         onValue(timerRef, (snapshot) => {
           const data = snapshot.val();
@@ -101,12 +102,24 @@
         });
 
         // Event Listeners for Buttons
-        document.getElementById("startPauseBtn").addEventListener("click", startPauseTimer);
-        document.getElementById("resetBtn").addEventListener("click", resetTimer);
-        document.getElementById("addMinBtn").addEventListener("click", () => adjustTime(60));
-        document.getElementById("subtractMinBtn").addEventListener("click", () => adjustTime(-60));
-        document.getElementById("addSecBtn").addEventListener("click", () => adjustTime(10));
-        document.getElementById("subtractSecBtn").addEventListener("click", () => adjustTime(-10));
+        document
+          .getElementById("startPauseBtn")
+          .addEventListener("click", startPauseTimer);
+        document
+          .getElementById("resetBtn")
+          .addEventListener("click", resetTimer);
+        document
+          .getElementById("addMinBtn")
+          .addEventListener("click", () => adjustTime(60));
+        document
+          .getElementById("subtractMinBtn")
+          .addEventListener("click", () => adjustTime(-60));
+        document
+          .getElementById("addSecBtn")
+          .addEventListener("click", () => adjustTime(10));
+        document
+          .getElementById("subtractSecBtn")
+          .addEventListener("click", () => adjustTime(-10));
 
         // Initialize Display
         updateTimerDisplay();
@@ -127,35 +140,34 @@
         overflow: hidden;
       }
       .timer {
-        font-size: 30vw;
+        font-size: 35vw;
         text-align: center;
+        margin-bottom: 20px;
       }
       .overtime {
         color: red;
       }
       .controls {
-        position: absolute;
-        bottom: 10%;
-        text-align: center;
         display: flex;
-        flex-direction: column;
+        flex-direction: flex;
         gap: 10px;
+        position: fixed;
+        bottom: 5%;
+        width: 90%;
+        max-width: 400px;
       }
       button {
-        font-size: 1.5rem;
-        padding: 10px 20px;
+        font-size: 0.5rem;
+        padding: 15px;
         border: none;
         background-color: #007bff;
         color: white;
-        border-radius: 5px;
+        border-radius: 10px;
         cursor: pointer;
+        width: 50px;
       }
       button:active {
         background-color: #0056b3;
-      }
-      .adjust-buttons {
-        display: flex;
-        gap: 10px;
       }
     </style>
   </head>
