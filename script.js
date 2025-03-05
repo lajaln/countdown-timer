@@ -4,13 +4,13 @@ import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebase
 
 // Your Firebase configuration
 const firebaseConfig = {
-  apiKey: "AIzaSyAxOg24lKbHYLfNKF1-99Lv6xsjYaVjiV8",
-  authDomain: "countdowntimer-74ae7.firebaseapp.com",
-  databaseURL: "https://countdowntimer-74ae7-default-rtdb.firebaseio.com",
-  projectId: "countdowntimer-74ae7",
-  storageBucket: "countdowntimer-74ae7.firebasestorage.app",
-  messagingSenderId: "252439672400",
-  appId: "1:252439672400:web:e633026072ee108965c355"
+  apiKey: "AIzaSyB0PVPp34njGmD5j0Z9njBj9A4t7eM31M8",
+  authDomain: "ctimer-1209d.firebaseapp.com",
+  databaseURL: "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
+  projectId: "ctimer-1209d",
+  storageBucket: "ctimer-1209d.firebasestorage.app",
+  messagingSenderId: "983710292830",
+  appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf"
 };
 
 // Initialize Firebase
