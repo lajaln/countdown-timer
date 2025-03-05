@@ -1,111 +1,227 @@
 // Import Firebase SDK
+
 import { initializeApp } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-app.js";
+
 import { getDatabase, ref, set, onValue } from "https://www.gstatic.com/firebasejs/10.8.0/firebase-database.js";
 
+
+
 // Your Firebase configuration
+
 const firebaseConfig = {
-  apiKey: "AIzaSyB0PVPp34njGmD5j0Z9njBj9A4t7eM31M8",
-  authDomain: "ctimer-1209d.firebaseapp.com",
-  databaseURL: "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
-  projectId: "ctimer-1209d",
-  storageBucket: "ctimer-1209d.firebasestorage.app",
-  messagingSenderId: "983710292830",
-  appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf"
+
+  apiKey: "AIzaSyAxOg24lKbHYLfNKF1-99Lv6xsjYaVjiV8",
+
+  authDomain: "countdowntimer-74ae7.firebaseapp.com",
+
+  databaseURL: "https://countdowntimer-74ae7-default-rtdb.firebaseio.com",
+
+  projectId: "countdowntimer-74ae7",
+
+  storageBucket: "countdowntimer-74ae7.firebasestorage.app",
+
+  messagingSenderId: "252439672400",
+
+  appId: "1:252439672400:web:e633026072ee108965c355"
+
 };
 
+
+
 // Initialize Firebase
+
 const app = initializeApp(firebaseConfig);
+
 const database = getDatabase(app);
+
 const timerRef = ref(database, "timer");
 
-// Variables
-let remainingTime = 60; // Default 1 minute
+
+
+// Timer Variables
+
+let remainingTime = 60; // Default countdown (in seconds)
+
 let isRunning = false;
+
 let startTime = null;
-let lastUpdateFromFirebase = 0;
-let ignoreNextUpdate = false; // Prevents double updates
 
-// Update Timer Display
+let timerInterval = null;
+
+
+
+// Function to update the display
+
 function updateTimerDisplay() {
+
   const minutes = Math.floor(Math.abs(remainingTime) / 60);
+
   const seconds = Math.abs(remainingTime) % 60;
-  document.getElementById("timer").textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+  const formattedTime = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+
+  document.getElementById("timer").textContent = formattedTime;
+
   document.getElementById("timer").classList.toggle("overtime", remainingTime < 0);
+
 }
 
-// Sync Timer to Firebase (Avoid Overwriting Fresh Data)
+
+
+// Sync Timer with Firebase
+
 function syncTimer(time, running, startTimestamp) {
-  if (ignoreNextUpdate) {
-    ignoreNextUpdate = false; // Reset flag
-    return;
-  }
 
-  const now = Date.now();
-  if (now - lastUpdateFromFirebase > 500) { // Prevent overwriting latest changes
-    set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
-  }
+  set(timerRef, { remainingTime: time, isRunning: running, startTime: startTimestamp });
+
 }
+
+
 
 // Start/Pause Timer
+
 function startPauseTimer() {
-  isRunning = !isRunning;
-  ignoreNextUpdate = true; // Prevent Firebase from undoing the change
 
   if (isRunning) {
-    startTime = Date.now();
-    syncTimer(remainingTime, true, startTime);
-  } else {
+
+    isRunning = false;
+
+    clearInterval(timerInterval);
+
     syncTimer(remainingTime, false, null);
+
+  } else {
+
+    isRunning = true;
+
+    startTime = Date.now();
+
+    syncTimer(remainingTime, true, startTime);
+
+    runTimer();
+
   }
+
 }
+
+
+
+// Function to keep timer running
+
+function runTimer() {
+
+  clearInterval(timerInterval);
+
+  timerInterval = setInterval(() => {
+
+    const elapsed = Math.floor((Date.now() - startTime) / 1000);
+
+    remainingTime -= elapsed;
+
+    startTime = Date.now(); // Reset start time to prevent drift
+
+    updateTimerDisplay();
+
+    syncTimer(remainingTime, isRunning, startTime);
+
+  }, 1000);
+
+}
+
+
 
 // Reset Timer
+
 function resetTimer() {
-  remainingTime = 60;
+
   isRunning = false;
+
+  remainingTime = 60;
+
+  clearInterval(timerInterval);
+
   syncTimer(remainingTime, false, null);
+
+  updateTimerDisplay();
+
 }
+
+
 
 // Adjust Timer
+
 function adjustTime(amount) {
+
   remainingTime += amount;
+
   updateTimerDisplay();
+
   syncTimer(remainingTime, isRunning, startTime);
+
 }
 
-// Listen for Firebase Changes
+
+
+// Listen for Firebase Updates
+
 onValue(timerRef, (snapshot) => {
-  if (ignoreNextUpdate) {
-    ignoreNextUpdate = false;
-    return;
-  }
 
   const data = snapshot.val();
+
   if (data) {
-    lastUpdateFromFirebase = Date.now();
+
     const now = Date.now();
 
     if (data.isRunning) {
+
       const elapsed = Math.floor((now - data.startTime) / 1000);
+
       remainingTime = data.remainingTime - elapsed;
+
       isRunning = true;
+
+      updateTimerDisplay();
+
+      runTimer(); // Restart timer loop
+
     } else {
+
       remainingTime = data.remainingTime;
+
       isRunning = false;
+
+      clearInterval(timerInterval);
+
+      updateTimerDisplay();
+
     }
-    updateTimerDisplay();
+
   }
+
 });
 
-// Event Listeners
+
+
+// Event Listeners for Buttons
+
 document.addEventListener("DOMContentLoaded", () => {
-  document.getElementById("startPause").addEventListener("click", startPauseTimer);
-  document.getElementById("reset").addEventListener("click", resetTimer);
+
   document.getElementById("addMin").addEventListener("click", () => adjustTime(60));
+
   document.getElementById("subMin").addEventListener("click", () => adjustTime(-60));
+
   document.getElementById("addSec").addEventListener("click", () => adjustTime(10));
+
   document.getElementById("subSec").addEventListener("click", () => adjustTime(-10));
+
+  document.getElementById("startPause").addEventListener("click", startPauseTimer);
+
+  document.getElementById("reset").addEventListener("click", resetTimer);
+
 });
 
-// Keep Timer Running in Background
+
+
+// Keep Timer Running Even When Leaving the Page
+
 updateTimerDisplay();
