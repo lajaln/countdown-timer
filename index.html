@@ -4,49 +4,184 @@
     <meta charset="UTF-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Remote Countdown Timer</title>
-    <script type="module" src="script.js"></script>
+    <script type="module">
+      // Import Firebase SDKs
+      import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
+      import {
+        getDatabase,
+        ref,
+        onValue,
+        set,
+        update,
+      } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+
+      // Firebase Configuration
+      const firebaseConfig = {
+        apiKey: "AIzaSyB0PVPp34njGmD5j0Z9njBj9A4t7eM31M8",
+        authDomain: "ctimer-1209d.firebaseapp.com",
+        databaseURL:
+          "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
+        projectId: "ctimer-1209d",
+        storageBucket: "ctimer-1209d.firebasestorage.app",
+        messagingSenderId: "983710292830",
+        appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf",
+      };
+
+      // Initialize Firebase
+      const app = initializeApp(firebaseConfig);
+      const db = getDatabase(app);
+      const timerRef = ref(db, "timer");
+
+      document.addEventListener("DOMContentLoaded", () => {
+        const timerElement = document.getElementById("timer");
+        let remainingTime = 60; // Default: 1 minute
+        let isPaused = true;
+        let timerInterval = null;
+
+        function updateTimerDisplay() {
+          const minutes = Math.floor(Math.abs(remainingTime) / 60);
+          const seconds = Math.abs(remainingTime) % 60;
+          timerElement.textContent = `${minutes
+            .toString()
+            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+          timerElement.classList.toggle("overtime", remainingTime < 0);
+        }
+
+        function startPauseTimer() {
+          isPaused = !isPaused;
+          update(timerRef, { isPaused });
+
+          if (!isPaused) {
+            if (!timerInterval) {
+              timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                update(timerRef, { remainingTime });
+              }, 1000);
+            }
+          } else {
+            clearInterval(timerInterval);
+            timerInterval = null;
+          }
+        }
+
+        function resetTimer() {
+          clearInterval(timerInterval);
+          timerInterval = null;
+          isPaused = true;
+          remainingTime = 60;
+          updateTimerDisplay();
+          set(timerRef, { remainingTime, isPaused: true });
+        }
+
+        function adjustTime(amount) {
+          remainingTime += amount;
+          updateTimerDisplay();
+          update(timerRef, { remainingTime });
+        }
+
+        function toggleFullScreen() {
+          if (!document.fullscreenElement) {
+            document.documentElement.requestFullscreen();
+          } else {
+            document.exitFullscreen();
+          }
+        }
+
+        // Sync Timer Data from Firebase
+        onValue(timerRef, (snapshot) => {
+          const data = snapshot.val();
+          if (data) {
+            remainingTime = data.remainingTime;
+            isPaused = data.isPaused;
+            updateTimerDisplay();
+
+            if (!isPaused && !timerInterval) {
+              timerInterval = setInterval(() => {
+                remainingTime--;
+                updateTimerDisplay();
+                update(timerRef, { remainingTime });
+              }, 1000);
+            } else if (isPaused && timerInterval) {
+              clearInterval(timerInterval);
+              timerInterval = null;
+            }
+          }
+        });
+
+        // Event Listeners for Controls
+        document.addEventListener("keydown", (event) => {
+          switch (event.key) {
+            case " ":
+              startPauseTimer();
+              break;
+            case "r":
+            case "R":
+              resetTimer();
+              break;
+            case "ArrowUp":
+              adjustTime(60);
+              break;
+            case "ArrowDown":
+              adjustTime(-60);
+              break;
+            case "ArrowRight":
+              adjustTime(10);
+              break;
+            case "ArrowLeft":
+              adjustTime(-10);
+              break;
+            case "f":
+            case "F":
+              toggleFullScreen();
+              break;
+          }
+        });
+
+        // Initialize Display
+        updateTimerDisplay();
+      });
+    </script>
+
     <style>
       body {
-        text-align: center;
-        background: black;
+        margin: 0;
+        display: flex;
+        flex-direction: column;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        background-color: black;
         color: white;
         font-family: Arial, sans-serif;
+        overflow: hidden;
       }
       .timer {
-        font-size: 25vw;
-        margin-top: 20vh;
-      }
-      .buttons {
-        margin-top: 20px;
-      }
-      button {
-        font-size: 2vw;
-        padding: 10px;
-        margin: 5px;
-        background: gray;
-        color: white;
-        border: none;
-        cursor: pointer;
-      }
-      button:active {
-        background: darkgray;
+        font-size: 30vw;
+        text-align: center;
       }
       .overtime {
         color: red;
+      }
+      .controls {
+        position: absolute;
+        bottom: 5%;
+        text-align: center;
+        font-size: 1vw;
+        color: white;
+        opacity: 0.5;
+        width: 100%;
       }
     </style>
   </head>
   <body>
     <div class="timer" id="timer">00:00</div>
-    <div class="buttons">
-      <button id="addMin">+1 Min</button>
-      <button id="subMin">-1 Min</button>
-      <button id="addSec">+10 Sec</button>
-      <button id="subSec">-10 Sec</button>
-      <button id="startPause">Start/Pause</button>
-      <button id="reset">Reset</button>
-      <button id="fullscreen">Full Screen</button>
-      <!-- NEW BUTTON -->
+    <div class="controls">
+      <p>Space: Start/Pause | R: Reset | F: Full Screen</p>
+      <p>
+        Arrow Up/Down: Adjust Time ±1 Minute | Arrow Left/Right: Adjust Time ±10
+        Seconds
+      </p>
     </div>
   </body>
 </html>
