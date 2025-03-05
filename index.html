@@ -7,24 +7,17 @@
     <script type="module">
       // Import Firebase SDKs
       import { initializeApp } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-app.js";
-      import {
-        getDatabase,
-        ref,
-        onValue,
-        set,
-        update,
-      } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
+      import { getDatabase, ref, onValue, set, update } from "https://www.gstatic.com/firebasejs/11.4.0/firebase-database.js";
 
       // Firebase Configuration
       const firebaseConfig = {
         apiKey: "AIzaSyB0PVPp34njGmD5j0Z9njBj9A4t7eM31M8",
         authDomain: "ctimer-1209d.firebaseapp.com",
-        databaseURL:
-          "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
+        databaseURL: "https://ctimer-1209d-default-rtdb.asia-southeast1.firebasedatabase.app",
         projectId: "ctimer-1209d",
         storageBucket: "ctimer-1209d.firebasestorage.app",
         messagingSenderId: "983710292830",
-        appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf",
+        appId: "1:983710292830:web:439756cd3b80d5d0fdcdcf"
       };
 
       // Initialize Firebase
@@ -41,9 +34,7 @@
         function updateTimerDisplay() {
           const minutes = Math.floor(Math.abs(remainingTime) / 60);
           const seconds = Math.abs(remainingTime) % 60;
-          timerElement.textContent = `${minutes
-            .toString()
-            .padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
+          timerElement.textContent = `${minutes.toString().padStart(2, "0")}:${seconds.toString().padStart(2, "0")}`;
           timerElement.classList.toggle("overtime", remainingTime < 0);
         }
 
@@ -109,34 +100,13 @@
           }
         });
 
-        // Event Listeners for Controls
-        document.addEventListener("keydown", (event) => {
-          switch (event.key) {
-            case " ":
-              startPauseTimer();
-              break;
-            case "r":
-            case "R":
-              resetTimer();
-              break;
-            case "ArrowUp":
-              adjustTime(60);
-              break;
-            case "ArrowDown":
-              adjustTime(-60);
-              break;
-            case "ArrowRight":
-              adjustTime(10);
-              break;
-            case "ArrowLeft":
-              adjustTime(-10);
-              break;
-            case "f":
-            case "F":
-              toggleFullScreen();
-              break;
-          }
-        });
+        // Event Listeners for Buttons
+        document.getElementById("startPauseBtn").addEventListener("click", startPauseTimer);
+        document.getElementById("resetBtn").addEventListener("click", resetTimer);
+        document.getElementById("addMinBtn").addEventListener("click", () => adjustTime(60));
+        document.getElementById("subtractMinBtn").addEventListener("click", () => adjustTime(-60));
+        document.getElementById("addSecBtn").addEventListener("click", () => adjustTime(10));
+        document.getElementById("subtractSecBtn").addEventListener("click", () => adjustTime(-10));
 
         // Initialize Display
         updateTimerDisplay();
@@ -165,23 +135,43 @@
       }
       .controls {
         position: absolute;
-        bottom: 5%;
+        bottom: 10%;
         text-align: center;
-        font-size: 1vw;
+        display: flex;
+        flex-direction: column;
+        gap: 10px;
+      }
+      button {
+        font-size: 1.5rem;
+        padding: 10px 20px;
+        border: none;
+        background-color: #007bff;
         color: white;
-        opacity: 0.5;
-        width: 100%;
+        border-radius: 5px;
+        cursor: pointer;
+      }
+      button:active {
+        background-color: #0056b3;
+      }
+      .adjust-buttons {
+        display: flex;
+        gap: 10px;
       }
     </style>
   </head>
   <body>
     <div class="timer" id="timer">00:00</div>
     <div class="controls">
-      <p>Space: Start/Pause | R: Reset | F: Full Screen</p>
-      <p>
-        Arrow Up/Down: Adjust Time ±1 Minute | Arrow Left/Right: Adjust Time ±10
-        Seconds
-      </p>
+      <button id="startPauseBtn">Start / Pause</button>
+      <button id="resetBtn">Reset</button>
+      <div class="adjust-buttons">
+        <button id="addMinBtn">+1 Min</button>
+        <button id="subtractMinBtn">-1 Min</button>
+      </div>
+      <div class="adjust-buttons">
+        <button id="addSecBtn">+10 Sec</button>
+        <button id="subtractSecBtn">-10 Sec</button>
+      </div>
     </div>
   </body>
 </html>
